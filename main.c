@@ -98,6 +98,7 @@ int main()
                 0, 0, WINDOW_WIDTH, WINDOW_HEIGHT, // Target x, y, width, height
                 0 // flags
             );
+            
             al_flip_display();
 
             redraw = false;
