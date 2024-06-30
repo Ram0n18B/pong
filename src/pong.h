@@ -20,7 +20,9 @@ enum PongState
     PLAY,
     DONE,
     SERVE_IA,
-    PLAY_IA
+    SERVE_BIIA,
+    PLAY_IA,
+    PLAY_BIIA
 };
 
 struct Pong
@@ -39,13 +41,14 @@ struct Pong
     struct Sounds* sounds;
 
     bool paddle_ia_band; // (true) activa el paddle2_IA (false) lo desactiva
+    bool paddle_bia_band; // (true) activa las dos paddles en IA
 };
 
 void init_pong(struct Pong* pong, struct Sounds* sounds);
 
 void handle_input_pong(struct Pong* pong, ALLEGRO_KEYBOARD_STATE* state);
 
-void handle_paddle_ia(struct Ball *ball, struct Paddle *paddle);
+void handle_paddle_ia(struct Ball *ball, struct Paddle *paddle, int paddle_index);
 
 void update_pong(struct Pong* pong, double dt);
 

@@ -47,6 +47,12 @@ void handle_input_pong(struct Pong* pong, ALLEGRO_KEYBOARD_STATE* state)
             pong->paddle_ia_band = true;
             pong->serving_player = rand() % 2 + 1;
         }
+        else if (al_key_down(state, ALLEGRO_KEY_B))
+        {
+            pong->state = SERVE_BIIA;
+            pong->paddle_bia_band = true;
+            pong->serving_player = rand() % 2 + 1;
+        }
     }
     else if (pong->state == SERVE)
     {
@@ -69,6 +75,22 @@ void handle_input_pong(struct Pong* pong, ALLEGRO_KEYBOARD_STATE* state)
         if (al_key_down(state, ALLEGRO_KEY_ENTER))
         {
             pong->state = PLAY_IA;
+
+            pong->ball.vx = rand() % 60 + 140;
+
+            if (pong->serving_player == 2)
+            {
+                pong->ball.vx *= -1;
+            }
+
+            pong->ball.vy = rand() % 100 - 50;
+        }
+    }
+    else if (pong->state == SERVE_BIIA) 
+    {
+        if (al_key_down(state, ALLEGRO_KEY_ENTER))
+        {
+            pong->state = PLAY_BIIA;
 
             pong->ball.vx = rand() % 60 + 140;
 
@@ -123,6 +145,10 @@ void handle_input_pong(struct Pong* pong, ALLEGRO_KEYBOARD_STATE* state)
             pong->player1.vy = 0;
         }
     }
+    else if (pong->state == PLAY_BIIA) //En el modo BIIA no es necesario recibir input
+    {
+        //EMPTY
+    }
     else
     {
         if (al_key_down(state, ALLEGRO_KEY_ENTER))
@@ -130,6 +156,10 @@ void handle_input_pong(struct Pong* pong, ALLEGRO_KEYBOARD_STATE* state)
             if (pong->paddle_ia_band)
             {
                 pong->state = SERVE_IA;
+            }
+            else if(pong->paddle_bia_band)
+            {
+                pong->state = SERVE_BIIA;
             } 
             else 
             {
@@ -152,9 +182,18 @@ void handle_input_pong(struct Pong* pong, ALLEGRO_KEYBOARD_STATE* state)
     }
 }
 
-void handle_paddle_ia(struct Ball *ball, struct Paddle *paddle)
+void handle_paddle_ia(struct Ball *ball, struct Paddle *paddle, int paddle_index)
 {   
-    if (ball->vx > 0.0f && (paddle->x - ball->x) > 17.5) 
+    float dx; //Distancia de la paleta a la bola
+    if(paddle_index == 1)
+    {
+        dx = ball->x - paddle->x;
+    }
+    else
+    {
+        dx = paddle->x - ball->x;
+    }
+    if (((paddle_index == 1 && ball->vx < 0.0f) || (paddle_index == 2 && ball->vx > 0.0f)) && dx > 17.5) 
     {
         if (paddle->y + PADDLE_HEIGHT/2 > ball->y + BALL_SIZE/2) 
         {
@@ -177,7 +216,7 @@ void handle_paddle_ia(struct Ball *ball, struct Paddle *paddle)
 
 void update_pong(struct Pong* pong, double dt)
 {
-    if (pong->state == PLAY || pong->state == PLAY_IA)
+    if (pong->state == PLAY || pong->state == PLAY_IA || pong->state == PLAY_BIIA)
     {
         update_paddle(&pong->player1, dt);
         update_paddle(&pong->player2, dt);
@@ -209,6 +248,10 @@ void update_pong(struct Pong* pong, double dt)
                 {
                     pong->state = SERVE_IA;
                 }
+                else if (pong->paddle_bia_band)
+                {
+                    pong->state = SERVE_BIIA;
+                }
                 else 
                 {
                     pong->state = SERVE;
@@ -232,6 +275,10 @@ void update_pong(struct Pong* pong, double dt)
                 if (pong->paddle_ia_band) 
                 {
                     pong->state = SERVE_IA;
+                }
+                else if(pong->paddle_bia_band)
+                {
+                    pong->state = SERVE_BIIA;
                 }
                 else 
                 {
@@ -287,7 +334,12 @@ void update_pong(struct Pong* pong, double dt)
 
         if (pong->state == PLAY_IA) 
         {
-            handle_paddle_ia(&pong->ball, &pong->player2);
+            handle_paddle_ia(&pong->ball, &pong->player2, 2);
+        }
+        else if(pong->state == PLAY_BIIA)
+        {
+            handle_paddle_ia(&pong->ball, &pong->player1, 1);
+            handle_paddle_ia(&pong->ball, &pong->player2, 2);
         }
     }
 }
@@ -313,8 +365,9 @@ void render_pong(struct Pong pong, struct Fonts fonts)
     {
         al_draw_text(fonts.large_font, al_map_rgb(255, 255, 255), TABLE_WIDTH / 2, TABLE_HEIGHT / 2, ALLEGRO_ALIGN_CENTER, "Press enter to start playing ¡person vs person!");
         al_draw_text(fonts.large_font, al_map_rgb(255, 255, 255), TABLE_WIDTH / 2, TABLE_HEIGHT / 2 + 40, ALLEGRO_ALIGN_CENTER, "Press a to start playing ¡person vs pc!");
+        al_draw_text(fonts.large_font, al_map_rgb(255, 255, 255), TABLE_WIDTH / 2, TABLE_HEIGHT / 2 + 80, ALLEGRO_ALIGN_CENTER, "Press b to see a demo");
     }
-    else if (pong.state == SERVE || pong.state == SERVE_IA)
+    else if (pong.state == SERVE || pong.state == SERVE_IA || pong.state == SERVE_BIIA)
     {
         al_draw_text(fonts.large_font, al_map_rgb(255, 255, 255), TABLE_WIDTH / 2, TABLE_HEIGHT / 2, ALLEGRO_ALIGN_CENTER, "Press enter to serve");
     }
